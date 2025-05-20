@@ -1,0 +1,47 @@
+# Build directories
+/build/
+/bin/
+/out/
+
+# CMake generated files
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+compile_commands.json
+
+# Executables
+*.exe
+*.exe~
+
+# Object files and libraries
+*.o
+*.obj
+*.lib
+*.a
+*.so
+*.dll
+
+# Visual Studio files (if any)
+*.vcxproj*
+*.sln
+*.user
+*.ipch
+*.pdb
+
+# JetBrains IDEs (CLion, etc.)
+.idea/
+
+# VS Code files
+.vscode/
+
+# Backup and temp files
+*~
+*.swp
+*.tmp
+
+# Logs
+*.log
+
+# Mac OS files
+.DS_Store
