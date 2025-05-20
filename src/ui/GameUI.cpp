@@ -78,7 +78,7 @@ std::string GameUI::p1WinMessage(){
         std::cout << "Unknown winner...\n";
         break;
       }
-      std::cout << "[DEBUG] ID passed to printWinMessage: " << player.getId() << "\n";
+      // std::cout << "[DEBUG] ID passed to printWinMessage: " << player.getId() << "\n";
     }
 
     void GameUI::sleepMilliSec(int delay) {
