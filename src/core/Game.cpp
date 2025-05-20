@@ -1,52 +1,70 @@
 #include "Game.h"
 #include "../utils/Validation.h"
+#include "../utils/Foundation.h"
 #include <iostream>
 
 GameUI Game::UI;
 Board Game::board;
 Bot Game::BOT;
 Human Game::singlePlayer;
-std::pair<Human, Human> Game::players;
+std::array<std::unique_ptr<Player>, 2> Game::players;
 
-Human Game::addPlayer(int playerNumber, char takenSymbol) {
-  std::string name;
-  char symbol;
+void Game::addPlayer(int index, const PlayerInfo& info) {
+  std::unique_ptr<Player> player;
 
-  system(CLEAR_COMMAND);
-  std::cout << "Enter name for Player " << playerNumber << ": ";
-  std::getline(std::cin, name);
-
-  while (!Valid::isValidName(name)) {
-    std::cout << "Invalid name. Please enter again: ";
-    std::getline(std::cin, name);
+  if (info.type == "human") {
+    player = std::make_unique<Human>(info.name);
+  } else if (info.type == "bot") {
+    player = std::make_unique<Bot>(info.name);
   }
 
-  do {
-    std::cout << "Choose your symbol (X or O): ";
-    std::cin >> symbol;
-    symbol = toupper(symbol);
-    std::cin.ignore();
+  player->setSymbol(info.symbol);
+  players[index] = std::move(player);
 
-    if (!Valid::isValidSymbol(symbol)) {
-      std::cout << "Invalid symbol. Only 'X' or 'O' allowed. Try again: ";
-      continue;
-    }
-
-    if (symbol == takenSymbol) {
-      std::cout << "Symbol already taken by another player. Choose a different one.\n";
-      continue;
-    }
-    break;
-  } while (true);
-
-  Human player(name);
-  player.setSymbol(symbol);
-
-  UI.slowPrint("Player \"" + player.getName() + "\" added with symbol '" + player.getSymbol() + "'", 80);
-  std::cout << std::endl;
-  UI.sleepMilliSec(1000);
-  return player;
+  UI.slowPrint("Player \"" + players[index]->getName() + "\" added with symbol '" + players[index]->getSymbol() + "'", 100);
+  UI.sleepMilliSec(900)
 }
+
+
+// Human Game::addPlayer(int playerNumber, char takenSymbol) {
+//   std::string name;
+//   char symbol;
+
+//   system(CLEAR_COMMAND);
+//   std::cout << "Enter name for Player " << playerNumber << ": ";
+//   std::getline(std::cin, name);
+
+//   while (!Valid::isValidName(name)) {
+//     std::cout << "Invalid name. Please enter again: ";
+//     std::getline(std::cin, name);
+//   }
+
+//   do {
+//     std::cout << "Choose your symbol (X or O): ";
+//     std::cin >> symbol;
+//     symbol = toupper(symbol);
+//     std::cin.ignore();
+
+//     if (!Valid::isValidSymbol(symbol)) {
+//       std::cout << "Invalid symbol. Only 'X' or 'O' allowed. Try again: ";
+//       continue;
+//     }
+
+//     if (symbol == takenSymbol) {
+//       std::cout << "Symbol already taken by another player. Choose a different one.\n";
+//       continue;
+//     }
+//     break;
+//   } while (true);
+
+//   Human player(name);
+//   player.setSymbol(symbol);
+
+//   UI.slowPrint("Player \"" + player.getName() + "\" added with symbol '" + player.getSymbol() + "'", 80);
+//   std::cout << std::endl;
+//   UI.sleepMilliSec(1000);
+//   return player;
+// }
 
 void Game::loop() {
   UI.printWelcome();
@@ -61,16 +79,25 @@ void Game::setup() {
 
   switch (UI.askGameMode()) {
     case GameMode::MultiPlayer: {
-      Human p1 = addPlayer(1);
-      Human p2 = addPlayer(2, p1.getSymbol());
-      players = std::make_pair(p1, p2);
+      PlayerInfo info1 = UI.promptPlayerInfo(1, '\0');
+      addPlayer(0, info1);
+      PlayerInfo info2 = UI.promptPlayerInfo(2, info1.symbol);
+      addPlayer(1, info2);
+
       break;
     }
     case GameMode::SinglePlayer: {
-      singlePlayer = addPlayer(1);
-      std::cout << "still in progress...";
-      // BOT = addBot();
-      break;
+      PlayerInfo info1 = UI.promptPlayerInfo(1, '\0');
+      addPlayer(0, info1);
+
+      char botSymbol = (info1.symbol == 'X') ? 'O' : 'X';
+      PlayerInfo botInfo;
+      botInfo.name = "BOT";
+      botInfo.symbol = botSymbol;
+      botInfo.type = "bot";
+
+      addPlayer(1, botInfo);
+
     }
     default:
       std::cout << "Invalid mode.\n";
@@ -87,7 +114,7 @@ void Game::multiPlay() {
 
   while (true) {
     UI.printBoard(board.platform);
-    Human* player = (turn % 2 == 0) ? &players.first : &players.second;
+    Player* player = players[turn % 2].get();
 
     currName = player->getName();
     currSymbol = player->getSymbol();
@@ -95,20 +122,20 @@ void Game::multiPlay() {
     std::cout << "=> " << currName << "'s turn (" << currSymbol << "). Enter a position (1-9): ";
     short move = Valid::askValidMove(board.platform);
 
-    short row = (move - 1) / 3;
-    short col = (move - 1) % 3;
+    short row = (move - 1) / board.MAX_HEIGHT;
+    short col = (move - 1) % board.MAX_WIDTH;
 
     board.platform[row][col] = currSymbol;
 
     if (Valid::isWin(board.platform, currSymbol)) {
       UI.printBoard(board.platform);
       player->incrementScore();
-      UI.printWinMessage(*player);
+      UI.printWinMessage(*dynamic_cast<Human*>(player)); // Safe only if Human
       GameUI::sleepMilliSec(2000);
       break;
     }
 
-    if (++turn == 9) {
+    if (++turn == board.MAX_HEIGHT * board.MAX_WIDTH) {
       UI.printBoard(board.platform);
       break;
     }

@@ -10,12 +10,17 @@ private:
 protected:
     explicit Player(const std::string& RULE);
 
-    void setScore(int score);
+public:
+    virtual ~Player() = default;
+
     void setSymbol(char symbol);
+    char getSymbol() const;
+
+    void setScore(int score);
+    int getScore() const;
     void incrementScore();
 
-public:
-    int getScore() const;
-    char getSymbol() const;
     std::string getRule() const;
+
+    virtual std::string getName() const = 0;
 };

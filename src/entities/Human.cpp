@@ -18,11 +18,11 @@ else
   std::cout << "Invalid name! Name must only contain letters and spaces, and cannot be empty.\n";
 }
 
-short Human::getId() {
+short Human::getId() const {
   return id;
 }
 
-std::string Human::getName() {
+std::string Human::getName() const {
   return name;
 }
 

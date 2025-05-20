@@ -1,8 +1,12 @@
 #pragma once
 #include "Player.h"
-class Bot : private Player {
-  const short id = 0;
+
+class Bot : public Player {
+  std::string name;
+
   public:
-  Bot() : Player("BOT"){}
-  short getId();
+    Bot(const std::string& name = "BOT") : Player("Bot"), name(name) {}
+    short getId() const { return 0; }
+
+    std::string getName() const override { return name; }
 };

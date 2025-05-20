@@ -3,6 +3,7 @@
 #include "../entities/Human.h"
 #include "../utils/Validation.h"
 #include "../utils/Foundation.h"
+#include "../utils/PlayerInfo.h"
 
 class GameUI {
   static std::string p1WinMessage();
@@ -16,6 +17,7 @@ class GameUI {
     static void slowPrint(const std::string& text, int delay = 50);
     void printBoard(char board[Board::MAX_HEIGHT][Board::MAX_WIDTH]);
     bool wantPlayUI(); 
-    GameMode askGameMode(); 
+    GameMode askGameMode();
+    PlayerInfo promptPlayerInfo(int playerNumber, char takenSymbol); 
     void printWelcome(); 
 };

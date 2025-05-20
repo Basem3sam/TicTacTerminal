@@ -5,14 +5,21 @@
 #include <cctype>
 
 bool Valid::isValidName(const std::string& name) {
-      if (name.empty()) return false;
+  if (name.empty()) return false;
 
-      // Check that every character is alphabetic or space
-      return std::all_of(name.begin(), name.end(), [](char c) {
-          return isalpha(c) || isspace(c);
-      });
+  // Trim spaces and check that something remains
+  std::string trimmed;
+  std::copy_if(name.begin(), name.end(), std::back_inserter(trimmed), [](char c) {
+    return !isspace(c);
+  });
 
-    }
+  if (trimmed.empty()) return false;
+
+  return std::all_of(name.begin(), name.end(), [](char c) {
+    return isalpha(c) || isspace(c);
+  });
+}
+
 
 bool Valid::isValidSymbol(char symbol) {
       symbol = toupper(symbol);
@@ -29,7 +36,7 @@ bool Valid::isValidMove(char platform[Board::MAX_HEIGHT][Board::MAX_WIDTH], int 
   //the product is the no. of choices
   if (move < 1 || move > Board::MAX_WIDTH * Board::MAX_HEIGHT) return false;
 
-  int row = (move - 1) / Board::MAX_HEIGHT;
+  int row = (move - 1) / Board::MAX_WIDTH;
   int col = (move - 1) % Board::MAX_HEIGHT;
 
   return platform[row][col] != 'X' && platform[row][col] != 'O';

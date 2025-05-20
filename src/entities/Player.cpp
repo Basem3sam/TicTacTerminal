@@ -1,4 +1,5 @@
 #include "Player.h"
+#include <stdexcept>
 
 Player::Player(const std::string& RULE) : RULE(RULE) {}
 
@@ -7,6 +8,9 @@ void Player::setScore(int score) {
 }
 
 void Player::setSymbol(char symbol) {
+  symbol = toupper(symbol);
+  if (symbol != 'X' && symbol != 'O')
+    throw std::invalid_argument("Invalid symbol.");
   this->symbol = symbol;
 }
 

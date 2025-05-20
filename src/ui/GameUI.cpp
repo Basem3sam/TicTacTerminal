@@ -55,6 +55,64 @@ std::string GameUI::p1WinMessage(){
     }
 }
 
+PlayerInfo GameUI::promptPlayerInfo(int playerNumber, char takenSymbol) {
+    PlayerInfo info;
+    std::string inputName;
+    char inputSymbol;
+    
+    system(CLEAR_COMMAND);
+
+    // Ask for player name
+    std::cout << "Enter name for Player " << playerNumber << ": ";
+    std::getline(std::cin, inputName);
+
+    while (!Valid::isValidName(inputName)) {
+        std::cout << "Invalid name. Please enter again: ";
+        std::getline(std::cin, inputName);
+    }
+    info.name = inputName;
+
+    // Ask for player symbol
+    do {
+        std::cout << "Choose your symbol (X or O): ";
+        std::cin >> inputSymbol;
+        inputSymbol = toupper(inputSymbol);
+        std::cin.ignore();
+
+        if (!Valid::isValidSymbol(inputSymbol)) {
+            std::cout << "Invalid symbol. Only 'X' or 'O' allowed. Try again: ";
+            continue;
+        }
+
+        if (inputSymbol == takenSymbol) {
+            std::cout << "Symbol already taken by another player. Choose a different one.\n";
+            continue;
+        }
+
+        break;
+    } while (true);
+    info.symbol = inputSymbol;
+
+    // Ask for player type (assuming you want to support bots here)
+    std::string typeInput;
+    do {
+        std::cout << "Is this player a human or bot? (h/b): ";
+        std::getline(std::cin, typeInput);
+        if (typeInput == "h" || typeInput == "H") {
+            info.type = "human";
+        } else if (typeInput == "b" || typeInput == "B") {
+            info.type = "bot";
+        } else {
+            std::cout << "Invalid input. Please enter 'h' for human or 'b' for bot.\n";
+            continue;
+        }
+        break;
+    } while (true);
+
+    return info;
+}
+
+
     void GameUI::printWinMessage(Human & player){
       switch (player.getId())
       {
