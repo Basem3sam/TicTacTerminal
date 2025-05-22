@@ -1,4 +1,5 @@
 #include "../utils/TextUtils.h"
+#include "../utils/TerminalStyle.h"
 #include "GameUI.h"
 #include <iostream>
 #include <limits>
@@ -34,27 +35,23 @@ std::string GameUI::botWinMessage(){
   }
 
 bool GameUI::wantPlay() {
-    std::string response;
-    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    std::cout << "\nDo you want to play again? (y/n): ";
-    std::getline(std::cin, response);
+  std::string response;
+  std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
 
-    for (char& c : response) c = tolower(c);
+  TextUtils::slowPrint("\nDo you want to play again? (y/n): ", 40);
+  std::getline(std::cin, response);
 
-    return (response == "y" || response == "yes" || response == "1");
+  for (char& c : response) c = tolower(c);
+
+  if (response == "y" || response == "yes" || response == "1") {
+    TextUtils::slowPrint("Great! Starting a new game...", 50);
+    TextUtils::sleepMilliSec(1000);
+    return true;
+  } else {
+    TextUtils::slowPrint("Thank you for playing. Exiting...", 50);
+    TextUtils::sleepMilliSec(1000);
+    return false;
   }
-
-char GameUI::askForSymbol(const std::string& playerName) {
-    char symbol;
-    while (true) {
-        std::cout << playerName << ", choose your symbol (X/O): ";
-        std::cin >> symbol;
-        if (Valid::isValidSymbol(symbol)) {
-            std::cin.ignore();
-            return toupper(symbol);
-        }
-        std::cout << "Invalid symbol! Please enter X or O.\n";
-    }
 }
 
 PlayerInfo GameUI::promptPlayerInfo(int playerNumber, char takenSymbol, bool askForType) {
@@ -64,40 +61,49 @@ PlayerInfo GameUI::promptPlayerInfo(int playerNumber, char takenSymbol, bool ask
 
   system(CLEAR_COMMAND);
 
-  std::cout << "Enter name for Player " << playerNumber << ": ";
+  std::cout << FG_BRIGHT_BLACK;
+  std::cout << "+--------------------------------------------------+\n";
+  std::cout << RESET;
+  std::cout << FG_CYAN << BOLD << "  Player " << playerNumber << " setup\n" << RESET;
+  std::cout << FG_BRIGHT_BLACK;
+  std::cout << "+--------------------------------------------------+\n";
+  std::cout << RESET;
+
+  // Prompt for player name
+  std::cout << FG_YELLOW << "  Enter name for Player " << playerNumber << ": " << RESET;
   std::getline(std::cin, inputName);
 
   while (!Valid::isValidName(inputName)) {
-    std::cout << "Invalid name. Please enter again: ";
+    std::cout << FG_RED << "  Invalid name. Please enter again: " << RESET;
     std::getline(std::cin, inputName);
   }
   info.name = inputName;
 
-  // Ask for player symbol
+  // Prompt for symbol
   while (true) {
-    std::cout << "Choose your symbol (X or O): ";
+    std::cout << FG_YELLOW << "  Choose your symbol (X or O): " << RESET;
     std::cin >> inputSymbol;
-    std::cin.clear(); // clear fail state
+    std::cin.clear();
     std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
     inputSymbol = toupper(inputSymbol);
 
     if (!Valid::isValidSymbol(inputSymbol)) {
-      std::cout << "Invalid symbol. Only 'X' or 'O' allowed. Try again.\n";
+      std::cout << FG_RED << "  Invalid symbol. Only 'X' or 'O' allowed. Try again.\n" << RESET;
       continue;
     }
     if (inputSymbol == takenSymbol) {
-      std::cout << "Symbol already taken by another player. Choose a different one.\n";
+      std::cout << FG_RED << "  Symbol already taken by another player. Choose a different one.\n" << RESET;
       continue;
     }
     break;
   }
   info.symbol = inputSymbol;
 
-  // Ask for player type
+  // Prompt for player type
   if (askForType) {
     std::string typeInput;
     while (true) {
-      std::cout << "Is this player a human or bot? (h/b): ";
+      std::cout << FG_YELLOW << "  Is this player a human or bot? (h/b): " << RESET;
       std::getline(std::cin, typeInput);
 
       if (typeInput == "h" || typeInput == "H") {
@@ -107,54 +113,81 @@ PlayerInfo GameUI::promptPlayerInfo(int playerNumber, char takenSymbol, bool ask
         info.type = PlayerType::Bot;
         break;
       } else {
-        std::cout << "Invalid input. Please enter 'h' for human or 'b' for bot.\n";
+        std::cout << FG_RED << "  Invalid input. Please enter 'h' for human or 'b' for bot.\n" << RESET;
       }
     }
   } else {
-    info.type = PlayerType::Human; // default
+    info.type = PlayerType::Human;
   }
+
+  std::cout << FG_BRIGHT_GREEN << "\n  Player " << playerNumber << " setup complete!\n" << RESET;
+  std::cout << FG_BRIGHT_BLACK << "+--------------------------------------------------+\n" << RESET;
+
   return info;
 }
 
-void GameUI::printWinMessage(Human& player){
-  switch (player.getId())
-  {
-  case 1:
-    std::cout << "========================================================" << std::endl;
-    std::cout << p1WinMessage() << std::endl;
-    std::cout << player.getName() << " wins! Current Score: " << player.getScore() << "\n";
-  break;
-  case 2:
-    std::cout << "========================================================" << std::endl;
-    std::cout << p2WinMessage() << std::endl;
-    std::cout << player.getName() << " wins! Current Score: " << player.getScore() << "\n";
-    break;
-  case 0:
-    std::cout << "=========================================================" << std::endl;
-    std::cout << botWinMessage() << std::endl;
-    std::cout << "humans had failed again :((" << std::endl;
-    break;
-  default:
-    std::cout << "=========================================================" << std::endl;
-    std::cout << "Unknown winner...\n";
-    break;
+void GameUI::printWinMessage(Human& player) {
+  std::string border = FG_BRIGHT_BLACK "+========================================================+\n" RESET;
+
+  std::cout << border;
+
+  switch (player.getId()) {
+    case 1: {
+      std::cout << FG_BRIGHT_CYAN << p1WinMessage() << RESET << "\n";
+      std::cout << FG_BRIGHT_GREEN << "  " << BOLD << player.getName() << RESET << FG_BRIGHT_GREEN << " wins the round!\n" << RESET;
+      std::cout << FG_YELLOW << "  Current Score: " << BOLD << player.getScore() << RESET << "\n";
+      break;
+    }
+    case 2: {
+      std::cout << FG_MAGENTA << p2WinMessage() << RESET << "\n";
+      std::cout << FG_BRIGHT_GREEN << "  " << BOLD << player.getName() << RESET << FG_BRIGHT_GREEN << " takes the victory!\n" << RESET;
+      std::cout << FG_YELLOW << "  Current Score: " << BOLD << player.getScore() << RESET << "\n";
+      break;
+    }
+    case 0: {
+      std::cout << FG_RED << botWinMessage() << RESET << "\n";
+      std::cout << FG_BRIGHT_RED << "  The machines have won this round... again.\n" << RESET;
+      break;
+    }
+    default: {
+      std::cout << FG_BRIGHT_RED << "  Unknown winner. Something went wrong.\n" << RESET;
+      break;
+    }
   }
-  // std::cout << "[DEBUG] ID passed to printWinMessage: " << player.getId() << "\n";
+
+  std::cout << border;
 }
 
 void GameUI::printBoard(char board[Board::MAX_HEIGHT][Board::MAX_WIDTH]) {
   system(CLEAR_COMMAND);
   std::cout << "\n";
+  std::cout << FG_BRIGHT_BLACK << "+===== TIC TAC TOE =====+\n" << RESET;
+
   for (int i = 0; i < Board::MAX_HEIGHT; i++) {
-    std::cout << " ";
+    std::cout << "      " << FG_BRIGHT_BLACK << " " << RESET;
+
     for (int j = 0; j < Board::MAX_WIDTH; j++) {
-      std::cout << " " << (board[i][j] == '\0' ? ' ' : board[i][j]) << " ";
-      if (j < 2) std::cout << "|";
+        char cell = board[i][j];
+        std::string cellColor;
+
+        if (cell == 'X') {
+            cellColor = FG_BRIGHT_RED;
+        } else if (cell == 'O') {
+            cellColor = FG_BRIGHT_BLUE;
+        } else {
+            cellColor = FG_BRIGHT_BLACK;
+        }
+
+        std::cout << " " << cellColor << (cell == '\0' ? ' ' : cell) << RESET << " ";
+        if (j < 2) std::cout << FG_BRIGHT_BLACK << "|" << RESET;
     }
+
     std::cout << "\n";
-    if (i < 2) std::cout << " ---+---+---\n";
-  }
-  std::cout << "\n"; 
+    if (i < 2) std::cout << "      " << FG_BRIGHT_BLACK << " ---+---+---" << RESET << "\n";
+}
+
+
+  std::cout << FG_BRIGHT_BLACK << "+=======================+\n\n" << RESET;
 }
 
 GameMode GameUI::askGameMode() {
@@ -162,46 +195,114 @@ GameMode GameUI::askGameMode() {
 
   while (true) {
     system(CLEAR_COMMAND);
-    std::cout << "Choose game mode:\n";
-    std::cout << "1. Single Player (vs Bot)\n";
-    std::cout << "2. Multiplayer (vs Friend)\n";
-    std::cout << "Enter choice (1 or 2): ";
 
+    std::cout << FG_BRIGHT_BLACK << "+=============================================+\n";
+    std::cout << "|                                             |\n";
+    std::cout << "|            " << FG_YELLOW << BOLD << "Select Your Game Mode" << RESET << FG_BRIGHT_BLACK << "            |\n";
+    std::cout << "|                                             |\n";
+    std::cout << "+=============================================+\n" << RESET;
+
+    std::cout << "\n";
+    TextUtils::slowPrint(FG_BRIGHT_GREEN "  [1] Single Player (vs Bot)\n", 20);
+    TextUtils::slowPrint(FG_BRIGHT_GREEN "  [2] Multiplayer (vs Friend)\n" RESET, 20);
+
+    std::cout << "\n" << FG_CYAN << "Enter your choice: " << RESET;
     std::getline(std::cin, input);
-    // Remove leading/trailing spaces
+
+    // Trim whitespace
     input.erase(0, input.find_first_not_of(" \t\n\r\f\v"));
     input.erase(input.find_last_not_of(" \t\n\r\f\v") + 1);
 
     if (input == "1" || input == "single" || input == "Single" || input == "S" || input == "s") {
+    
+      std::cout << "\n" << FG_GREEN;
+      TextUtils::slowPrint(">> You selected Single Player mode. Loading...\n", 25);
+      std::cout << RESET;
+      TextUtils::sleepMilliSec(1000);
+    
       return GameMode::SinglePlayer;
-    }
-    else if (input == "2" || input == "multi" || input == "Multi" || input == "M" || input == "m") {
+    
+    } else if (input == "2" || input == "multi" || input == "Multi" || input == "M" || input == "m") {
+      std::cout << "\n" << FG_GREEN;
+      TextUtils::slowPrint(">> You selected Multiplayer mode. Preparing match...\n", 25);
+      std::cout << RESET;
+      TextUtils::sleepMilliSec(1000);
+    
       return GameMode::MultiPlayer;
-    }
-    else {
-      TextUtils::slowPrint("Invalid input. Please enter 1 for Single Player or 2 for Multiplayer.",20);
-      TextUtils::sleepMilliSec(750);
+    
+    } else {
+      std::cout << "\n" << FG_RED;
+      TextUtils::slowPrint("!! Invalid input. Please enter 1 or 2.\n", 20);
+      std::cout << RESET;
+      TextUtils::sleepMilliSec(1000);
     }
   }
 }
 
+
 void GameUI::printWelcome() {
-  system(CLEAR_COMMAND);
-  TextUtils::slowPrint("     Welcome to the Ultimate XO Game!\n", 60);
-  TextUtils::slowPrint("     Created by: Basem Esam\n", 60);
-  TextUtils::slowPrint("     Get ready to play", 80);
-  TextUtils::slowPrint("...",250);
-  TextUtils::sleepMilliSec(2000);
+    system(CLEAR_COMMAND);
+
+    using namespace TextUtils;
+
+    const std::string topBorder     = FG_CYAN BOLD "      +------------------------------------------------------------+\n";
+    const std::string spacerLine    = FG_CYAN BOLD "      |                                                            |\n";
+    const std::string bottomBorder  = FG_CYAN BOLD "      +------------------------------------------------------------+\n";
+
+    // Top Border
+    slowPrint(topBorder, 1);
+
+    // Title Line
+    slowPrint(FG_CYAN BOLD "      |" RESET, 1);
+    slowPrint("              ", 2);
+    slowPrint(FG_MAGENTA BOLD "Welcome to the ", 60);
+    slowPrint(FG_BRIGHT_MAGENTA BOLD "Ultimate XO Game!", 60);
+    slowPrint(FG_CYAN BOLD "              |\n", 2);
+
+    // Spacer
+    slowPrint(spacerLine, 1);
+
+    // Creator Line
+    slowPrint(FG_CYAN BOLD "      |" RESET, 1);
+    slowPrint("                   ", 2);
+    slowPrint(FG_YELLOW BOLD "Created by: ", 60);
+    slowPrint(FG_GREEN BOLD "Basem Esam", 60);
+    slowPrint(FG_CYAN BOLD "                   |\n", 2);
+
+    // Spacer
+    slowPrint(spacerLine, 1);
+
+    // Bottom Border
+    slowPrint(bottomBorder, 1);
+
+    // Loading Message
+    slowPrint("\n     ", 1);
+    slowPrint(FG_BRIGHT_BLACK "Initializing", 100);
+    slowPrint(FG_BRIGHT_BLACK "...\n", 250);
+
+    // Final pause
+    sleepMilliSec(1500);
 }
 
 void GameUI::printPlayerAdded(const Player& player) {
-  TextUtils::slowPrint("Player \"" + player.getName() + "\" added with symbol '" + player.getSymbol() + "'", 100);
+  std::string msg = std::string(FG_GREEN) + BOLD + "Player \"" + RESET +
+                    std::string(FG_BRIGHT_YELLOW) + player.getName() + RESET +
+                    std::string(FG_GREEN) + BOLD + "\" added with symbol '" + RESET +
+                    std::string(FG_BRIGHT_CYAN) + player.getSymbol() + RESET +
+                    std::string(FG_GREEN) + BOLD + "'" + RESET;
+  TextUtils::slowPrint(msg, 60);
   TextUtils::sleepMilliSec(900);
 }
-
 void GameUI::printDrawMessage() {
-  std::cout << "\nIt's a draw! No one wins this round.\n";
+  std::cout << FG_BRIGHT_BLACK;
+  std::cout << "+--------------------------------------------------+\n";
+  std::cout << RESET;
+  std::cout << FG_BRIGHT_MAGENTA << BOLD << "  It's a draw! No one wins this round." << RESET << "\n";
+  std::cout << FG_BRIGHT_BLACK;
+  std::cout << "+--------------------------------------------------+\n";
+  std::cout << RESET;
 }
+
 
 short GameUI::getPlayerMove(const std::string& name, char symbol, const char board[3][3]) {
   std::string input;
@@ -227,23 +328,31 @@ short GameUI::getPlayerMove(const std::string& name, char symbol, const char boa
 }
 
 void GameUI::printInvalidMoveMessage() {
-  std::cout << "Invalid move. Try a different position.\n";
+  std::cout << FG_RED BOLD << "Invalid move." << RESET << " Try a different position.\n";
 }
 
 void GameUI::printInvalidInputMessage() {
-  std::cout << "Invalid input. Please enter a number.\n";
+  std::cout << FG_RED BOLD << "Invalid input." << RESET << " Please enter a valid number.\n";
 }
 
 void GameUI::displayGameOver() {
     system(CLEAR_COMMAND);
     using namespace std::chrono_literals;
-    std::cout << "\n\n";
-    std::cout << "=============================================\n";
-    std::cout << "               \033[1;31mG A M E   O V E R\033[0m               \n";
-    std::cout << "=============================================\n";
-    std::cout << "\n";
-    std::cout << "        \033[1;36mEngine created by Basem Esam\033[0m\n";
-    std::cout << "\n";
-    std::cout << "=============================================\n";
+    std::cout << FG_BRIGHT_BLACK;
+    std::cout << "+============================================+\n";
+    std::cout << RESET;
+
+    std::cout << "               " << FG_RED << "G A M E   O V E R" << RESET << "               \n";
+
+    std::cout << FG_BRIGHT_BLACK;
+    std::cout << "+============================================+\n\n";
+    std::cout << RESET;
+
+    std::cout << "        " << FG_CYAN << "Engine created by Basem Esam" << RESET << "\n\n";
+
+    std::cout << FG_BRIGHT_BLACK;
+    std::cout << "+============================================+\n";
+    std::cout << RESET;
+
     std::this_thread::sleep_for(3s); // Pause for 3 seconds
 }
