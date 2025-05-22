@@ -30,39 +30,21 @@ bool Valid::isSameName(const std::string &n1, const std::string &n2) {
   return (n1 == n2);
 }
 
-bool Valid::isValidMove(char platform[Board::MAX_HEIGHT][Board::MAX_WIDTH], int move) {
+bool Valid::isValidMove(const char platform[Board::MAX_HEIGHT][Board::MAX_WIDTH], int move) {
   //max_width ==> no. columns in the matrix
   //max_height ==> no. raws in the matrix
   //the product is the no. of choices
   if (move < 1 || move > Board::MAX_WIDTH * Board::MAX_HEIGHT) return false;
 
   int row = (move - 1) / Board::MAX_WIDTH;
-  int col = (move - 1) % Board::MAX_HEIGHT;
+  int col = (move - 1) % Board::MAX_WIDTH;
 
   return platform[row][col] != 'X' && platform[row][col] != 'O';
 }
 
-short Valid::askValidMove(char platform[Board::MAX_HEIGHT][Board::MAX_WIDTH]) {
-  int move;
-
-  while (true) {
-    std::cout << "Enter your move: ";
-    std::cin >> move;
-
-    // reseting the input stream
-    if (std::cin.fail()) {
-        std::cin.clear();
-        std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-        std::cout << "Invalid input. Please enter a number.\n";
-        continue;
-    }
-
-    if (!isValidMove(platform, move)) {
-        std::cout << "Invalid move. Try a different position.\n";
-        continue;
-    }
-    return move;
-  }
+bool Valid::isNumeric(const std::string& input) {
+  if (input.empty()) return false;
+  return std::all_of(input.begin(), input.end(), ::isdigit);
 }
 
 bool Valid::isWin(char platform[Board::MAX_HEIGHT][Board::MAX_WIDTH], char symbol) {

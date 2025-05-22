@@ -1,143 +1,108 @@
-#include "Game.h"
 #include "../utils/Validation.h"
-#include "../utils/Foundation.h"
+#include "../utils/TextUtils.h"
 #include <iostream>
+#include "Game.h"
 
-GameUI Game::UI;
-Board Game::board;
-Bot Game::BOT;
-Human Game::singlePlayer;
-std::array<std::unique_ptr<Player>, 2> Game::players;
+Game::Game(IGameUI* ui) : UI(ui) {}
 
 void Game::addPlayer(int index, const PlayerInfo& info) {
   std::unique_ptr<Player> player;
 
-  if (info.type == "human") {
-    player = std::make_unique<Human>(info.name);
-  } else if (info.type == "bot") {
-    player = std::make_unique<Bot>(info.name);
+  switch(info.type) {
+    case PlayerType::Human:
+      player = std::make_unique<Human>(info.name);
+      break;
+    case PlayerType::Bot:
+      player = std::make_unique<Bot>(info.name);
+      break;
+    default:
+      std::cerr << "Error: Unknown player type '" << TextUtils::playerTypeToString(info.type) << "'\n";
+      return; // or throw an exception, or handle gracefully
   }
 
   player->setSymbol(info.symbol);
   players[index] = std::move(player);
 
-  UI.slowPrint("Player \"" + players[index]->getName() + "\" added with symbol '" + players[index]->getSymbol() + "'", 100);
-  UI.sleepMilliSec(900)
-}
-
-
-// Human Game::addPlayer(int playerNumber, char takenSymbol) {
-//   std::string name;
-//   char symbol;
-
-//   system(CLEAR_COMMAND);
-//   std::cout << "Enter name for Player " << playerNumber << ": ";
-//   std::getline(std::cin, name);
-
-//   while (!Valid::isValidName(name)) {
-//     std::cout << "Invalid name. Please enter again: ";
-//     std::getline(std::cin, name);
-//   }
-
-//   do {
-//     std::cout << "Choose your symbol (X or O): ";
-//     std::cin >> symbol;
-//     symbol = toupper(symbol);
-//     std::cin.ignore();
-
-//     if (!Valid::isValidSymbol(symbol)) {
-//       std::cout << "Invalid symbol. Only 'X' or 'O' allowed. Try again: ";
-//       continue;
-//     }
-
-//     if (symbol == takenSymbol) {
-//       std::cout << "Symbol already taken by another player. Choose a different one.\n";
-//       continue;
-//     }
-//     break;
-//   } while (true);
-
-//   Human player(name);
-//   player.setSymbol(symbol);
-
-//   UI.slowPrint("Player \"" + player.getName() + "\" added with symbol '" + player.getSymbol() + "'", 80);
-//   std::cout << std::endl;
-//   UI.sleepMilliSec(1000);
-//   return player;
-// }
-
-void Game::loop() {
-  UI.printWelcome();
-  do {
-    setup();
-    multiPlay();
-  } while (UI.wantPlayUI());
+  if (players[index]) {
+    UI->printPlayerAdded(*players[index]);
+  } else {
+    std::cerr << "Error: Failed to create player for index " << index << "\n";
+  }
 }
 
 void Game::setup() {
   Human::resetIdCounter(); //reset static id's
 
-  switch (UI.askGameMode()) {
+  switch (UI->askGameMode()) {
     case GameMode::MultiPlayer: {
-      PlayerInfo info1 = UI.promptPlayerInfo(1, '\0');
+      PlayerInfo info1 = UI->promptPlayerInfo(1, '\0', true);
       addPlayer(0, info1);
-      PlayerInfo info2 = UI.promptPlayerInfo(2, info1.symbol);
+
+      PlayerInfo info2 = UI->promptPlayerInfo(2, info1.symbol, true);
       addPlayer(1, info2);
 
       break;
     }
     case GameMode::SinglePlayer: {
-      PlayerInfo info1 = UI.promptPlayerInfo(1, '\0');
+      PlayerInfo info1 = UI->promptPlayerInfo(1, '\0', false);
       addPlayer(0, info1);
 
       char botSymbol = (info1.symbol == 'X') ? 'O' : 'X';
       PlayerInfo botInfo;
       botInfo.name = "BOT";
       botInfo.symbol = botSymbol;
-      botInfo.type = "bot";
-
+      botInfo.type = PlayerType::Bot;
+      std::cout << "\n";
       addPlayer(1, botInfo);
-
+      break;
     }
     default:
-      std::cout << "Invalid mode.\n";
+      std::cerr << "Invalid mode.\n";
       break;
   }
 }
 
 void Game::multiPlay() {
-  std::string currName;
-  char currSymbol;
   short turn = 0;
-
   board.reset();
 
   while (true) {
-    UI.printBoard(board.platform);
+    UI->printBoard(board.platform);
     Player* player = players[turn % 2].get();
+    char symbol = player->getSymbol();
 
-    currName = player->getName();
-    currSymbol = player->getSymbol();
+    short move = UI->getPlayerMove(player->getName(), symbol, board.platform);
+    short row = (move - 1) / Board::MAX_HEIGHT;
+    short col = (move - 1) % Board::MAX_WIDTH;
 
-    std::cout << "=> " << currName << "'s turn (" << currSymbol << "). Enter a position (1-9): ";
-    short move = Valid::askValidMove(board.platform);
+    board.platform[row][col] = symbol;
 
-    short row = (move - 1) / board.MAX_HEIGHT;
-    short col = (move - 1) % board.MAX_WIDTH;
-
-    board.platform[row][col] = currSymbol;
-
-    if (Valid::isWin(board.platform, currSymbol)) {
-      UI.printBoard(board.platform);
+    if (Valid::isWin(board.platform, symbol)) {
+      UI->printBoard(board.platform);
       player->incrementScore();
-      UI.printWinMessage(*dynamic_cast<Human*>(player)); // Safe only if Human
-      GameUI::sleepMilliSec(2000);
+
+      if (auto human = dynamic_cast<Human*>(player)) {
+        UI->printWinMessage(*human);
+      }
+
+      TextUtils::sleepMilliSec(2000);
       break;
     }
 
-    if (++turn == board.MAX_HEIGHT * board.MAX_WIDTH) {
-      UI.printBoard(board.platform);
+    if (++turn == Board::MAX_HEIGHT * Board::MAX_WIDTH) {
+      UI->printBoard(board.platform);
+      UI->printDrawMessage();
       break;
     }
   }
+}
+
+
+void Game::loop() {
+  UI->printWelcome();
+  do {
+    setup();
+    multiPlay();
+  } while (UI->wantPlay());
+  UI->displayGameOver();
 }

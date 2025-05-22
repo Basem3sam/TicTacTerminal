@@ -1,23 +1,26 @@
 #pragma once
-#include "../ui/GameUI.h"
 #include "../utils/Foundation.h"
+#include "../utils/PlayerInfo.h"
 #include "../entities/Human.h"
 #include "../entities/Bot.h"
-#include <utility>
+#include "../ui/IGameUI.h"
 #include <memory>
 #include <array>
 
+
 class Game {
-  static GameUI UI;
-  static Board board;
-  static std::array<std::unique_ptr<Player>, 2> players;
-  static Bot BOT;
-  static Human singlePlayer;
-  static void addPlayer(int index, const PlayerInfo& info);
+  IGameUI* UI;
+  Board board;
+  std::array<std::unique_ptr<Player>, 2> players;
+  Bot BOT;
+  Human singlePlayer;
+
+  void addPlayer(int index, const PlayerInfo& info);
+  void setup();
+  void multiPlay();
   // static Human addPlayer(int playerNumber, char takenSymbol = '\0'); OLD
 
 public:
-  static void loop();
-  static void setup();
-  static void multiPlay();
+  explicit Game(IGameUI* ui);
+  void loop();
 };

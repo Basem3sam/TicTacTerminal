@@ -3,18 +3,18 @@ project(TicTacTerminal)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# Find SFML package (make sure SFML is installed)
-find_package(SFML 2.5 COMPONENTS audio REQUIRED)
+# Find SFML (now include graphics and window)
+find_package(SFML 2.5 COMPONENTS audio graphics window REQUIRED)
 
 # Collect all source files
 file(GLOB_RECURSE SOURCES "src/*.cpp")
-file(GLOB_RECURSE HEADERS "src/*.h") # Optional
+file(GLOB_RECURSE HEADERS "src/*.h")
 
-# Create the executable (this name must match below)
+# Create the executable
 add_executable(XO ${SOURCES} ${HEADERS})
 
-# Link SFML to the correct target (XO)
-target_link_libraries(XO sfml-audio)
+# Link SFML libraries
+target_link_libraries(XO sfml-audio sfml-graphics sfml-window)
 
-# CMakeLists.txt
+# Copy media folder (e.g., fonts, sounds, etc.)
 file(COPY ${CMAKE_SOURCE_DIR}/src/media DESTINATION ${CMAKE_BINARY_DIR})
