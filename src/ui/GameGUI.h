@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef ENABLE_SFML_GUI
+
 #include "IGameUI.h"
 #include <SFML/Graphics.hpp>
 #include <SFML/Window.hpp>
@@ -35,3 +37,5 @@ private:
     bool hasLastBoard = false;
     BotDifficulty askBotDifficulty() override;
 };
+
+#endif

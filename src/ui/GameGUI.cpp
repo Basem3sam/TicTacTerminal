@@ -1,3 +1,5 @@
+#ifdef ENABLE_SFML_GUI
+
 #include "GameGUI.h"
 #include "../utils/Validation.h"
 #include "../utils/TextUtils.h"
@@ -226,3 +228,5 @@ void GameGUI::displayGameOver() {
     // Finally, close the window
     window.close();
 }
+
+#endif
