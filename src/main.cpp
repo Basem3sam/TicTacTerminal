@@ -1,7 +1,7 @@
+#include "utils/TextUtils.h"
 #include "ui/UISwitcher.h"
 #include <SFML/Audio.hpp>
 #include "core/Game.h"
-#include "utils/TextUtils.h"
 #include <iostream>
 #include <memory>
 

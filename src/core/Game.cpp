@@ -58,6 +58,8 @@ GameMode Game::setup() {
       addPlayer(1, botInfo);
       break;
     }
+    case GameMode::Quit:
+      break;
     default:
       std::cerr << "Invalid mode.\n";
       break;
