@@ -58,7 +58,7 @@ GameMode Game::setup() {
       addPlayer(1, botInfo);
       break;
     }
-    case GameMode::Quit:
+    case GameMode::Return:
       break;
     default:
       std::cerr << "Invalid mode.\n";
@@ -176,8 +176,8 @@ bool Game::play() {
   do {
     GameMode mode = setup();
 
-    if (mode == GameMode::Quit) {
-      return false; // User quit before playing
+    if (mode == GameMode::Return) {
+      return true; // User quit before playing
     }
 
     switch (mode) {

@@ -199,7 +199,7 @@ GameMode GameUI::askGameMode() {
     std::cout << "\n";
     TextUtils::slowPrint(FG_BRIGHT_GREEN "  [1] Single Player (vs Bot)\n", 20);
     TextUtils::slowPrint(FG_BRIGHT_GREEN "  [2] Multiplayer (vs Friend)\n" RESET, 20);
-    TextUtils::slowPrint(FG_BRIGHT_RED "  [3] Exit..\n" RESET, 20);
+    TextUtils::slowPrint(FG_BRIGHT_RED "  [3] Return to Main Menu\n" RESET, 20);
 
     std::cout << "\n" << FG_CYAN << "Enter your choice: " << RESET;
     std::getline(std::cin, input);
@@ -212,7 +212,6 @@ GameMode GameUI::askGameMode() {
     
       std::cout << "\n" << FG_GREEN;
       TextUtils::slowPrint(">> You selected Single Player mode. Loading...\n", 25);
-      std::cout << RESET;
       TextUtils::sleepMilliSec(1000);
     
       return GameMode::SinglePlayer;
@@ -227,16 +226,17 @@ GameMode GameUI::askGameMode() {
     
     } else if (input == "3" || input == "exit" || input == "Exit" || input == "Q" || input == "q") {
       std::cout << "\n" << FG_RED;
-      TextUtils::slowPrint(">> Exiting...\n", 80);
-      std::cout << RESET;
+      TextUtils::slowPrint(">> Returning", 80);
+      TextUtils::slowPrint("...", 120);
+      std::cout << std::endl;
       TextUtils::sleepMilliSec(1000);
-
-      return GameMode::Quit;
+      TextUtils::slowPrint("Back to main menu.\n", 25, FG_RED);
+      TextUtils::sleepMilliSec(200);
+      return GameMode::Return;
     } else {
       std::cout << "\n" << FG_RED;
-      TextUtils::slowPrint("!! Invalid input. Please enter 1 or 2.\n", 20);
-      std::cout << RESET;
-      TextUtils::sleepMilliSec(1000);
+      TextUtils::slowPrint("!! Invalid input. Please enter 1 or 2.\n", 25);
+      TextUtils::sleepMilliSec(1200);
     }
   }
 }

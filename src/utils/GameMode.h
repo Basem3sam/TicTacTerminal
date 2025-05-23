@@ -3,5 +3,5 @@
 enum class GameMode {
   SinglePlayer,
   MultiPlayer,
-  Quit
+  Return
 };

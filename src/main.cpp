@@ -1,7 +1,12 @@
 #include "utils/TextUtils.h"
 #include "ui/UISwitcher.h"
-#include <SFML/Audio.hpp>
 #include "core/Game.h"
+
+#ifdef ENABLE_SFML_GUI
+#include <SFML/Audio.hpp>
+#include "ui/GameGUI.h"
+#endif
+
 #include <iostream>
 #include <memory>
 
@@ -16,21 +21,20 @@ bool XOGame() {
 }
 
 int main() {
+#ifdef ENABLE_SFML_GUI
   sf::Music music;
   if (!music.openFromFile("media/music.wav")) {
-      std::cerr << "Could not load music\n";
+    std::cerr << "Could not load music\n";
   } else {
-      music.setLoop(true);
-      music.play();
-      music.setVolume(100);
+    music.setLoop(true);
+    music.play();
+    music.setVolume(100);
   }
+#endif
 
-  while (!XOGame()) {
-    // If XOGame returns false, user quit — re-show UI mode selection
-    continue;
-  }
+  while (XOGame()) {}
 
-  std::cout << FG_BRIGHT_BLACK << "\nPress Enter to exit..." << RESET;
+  std::cout << FG_BRIGHT_BLACK << "Press Enter to exit..." << RESET;
   std::cin.get();
   return 0;
 }
