@@ -3,12 +3,13 @@
 
 class Player {
 private:
-    std::string RULE;
-    char symbol;
+    const std::string RULE;
+    char symbol = '\0';
     int score = 0;
+    short id = -1;
 
 protected:
-    explicit Player(const std::string& RULE);
+    explicit Player(const std::string& rule);
 
 public:
     virtual ~Player() = default;
@@ -18,6 +19,10 @@ public:
 
     void setScore(int score);
     int getScore() const;
+
+    void setId(short id);
+    virtual short getId() const;
+
     void incrementScore();
 
     std::string getRule() const;

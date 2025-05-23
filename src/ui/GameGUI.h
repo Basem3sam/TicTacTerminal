@@ -15,7 +15,7 @@ public:
     bool wantPlay() override;
     GameMode askGameMode() override;
     void printBoard(char board[Board::MAX_HEIGHT][Board::MAX_WIDTH]) override;
-    void printWinMessage(Human& player) override;
+    void printWinMessage(Player& player) override;
     void printWelcome() override;
     void printPlayerAdded(const Player& player) override;
     void printDrawMessage() override;
@@ -33,4 +33,5 @@ private:
     
     char lastBoard[Board::MAX_HEIGHT][Board::MAX_WIDTH]{};
     bool hasLastBoard = false;
+    BotDifficulty askBotDifficulty() override;
 };

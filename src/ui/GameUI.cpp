@@ -1,4 +1,5 @@
 #include "../utils/TextUtils.h"
+#include "../utils/Validation.h"
 #include "../utils/TerminalStyle.h"
 #include "GameUI.h"
 #include <iostream>
@@ -126,33 +127,26 @@ PlayerInfo GameUI::promptPlayerInfo(int playerNumber, char takenSymbol, bool ask
   return info;
 }
 
-void GameUI::printWinMessage(Human& player) {
-  std::string border = FG_BRIGHT_BLACK "+========================================================+\n" RESET;
+void GameUI::printWinMessage(Player& player) {
+  const std::string border = FG_BRIGHT_BLACK "+========================================================+\n" RESET;
+  const std::string scoreLabel = FG_YELLOW "  Current Score: " + std::string(BOLD) + std::to_string(player.getScore()) + RESET "\n";
 
   std::cout << border;
 
-  switch (player.getId()) {
-    case 1: {
-      std::cout << FG_BRIGHT_CYAN << p1WinMessage() << RESET << "\n";
-      std::cout << FG_BRIGHT_GREEN << "  " << BOLD << player.getName() << RESET << FG_BRIGHT_GREEN << " wins the round!\n" << RESET;
-      std::cout << FG_YELLOW << "  Current Score: " << BOLD << player.getScore() << RESET << "\n";
-      break;
-    }
-    case 2: {
-      std::cout << FG_MAGENTA << p2WinMessage() << RESET << "\n";
-      std::cout << FG_BRIGHT_GREEN << "  " << BOLD << player.getName() << RESET << FG_BRIGHT_GREEN << " takes the victory!\n" << RESET;
-      std::cout << FG_YELLOW << "  Current Score: " << BOLD << player.getScore() << RESET << "\n";
-      break;
-    }
-    case 0: {
-      std::cout << FG_RED << botWinMessage() << RESET << "\n";
-      std::cout << FG_BRIGHT_RED << "  The machines have won this round... again.\n" << RESET;
-      break;
-    }
-    default: {
-      std::cout << FG_BRIGHT_RED << "  Unknown winner. Something went wrong.\n" << RESET;
-      break;
-    }
+  const int id = player.getId();
+  const std::string& name = player.getName();
+
+  if (player.getRule() == "Bot") {
+    TextUtils::styledPrint("  " + botWinMessage() + "\n", FG_RED);
+    TextUtils::styledPrint("  The machines have won this round... again.\n", FG_BRIGHT_RED);
+  } else if (player.getId() == 1) {
+    TextUtils::styledPrint("  " + p1WinMessage() + "\n", FG_BRIGHT_CYAN);
+    TextUtils::styledPrint("  " + name + " wins the round!\n", std::string(FG_BRIGHT_GREEN) + BOLD);
+    std::cout << scoreLabel;
+  } else {
+    TextUtils::styledPrint("  " + p2WinMessage() + "\n", FG_MAGENTA);
+    TextUtils::styledPrint("  " + name + " takes the victory!\n", std::string(FG_BRIGHT_GREEN) + BOLD);
+    std::cout << scoreLabel;
   }
 
   std::cout << border;
@@ -205,6 +199,7 @@ GameMode GameUI::askGameMode() {
     std::cout << "\n";
     TextUtils::slowPrint(FG_BRIGHT_GREEN "  [1] Single Player (vs Bot)\n", 20);
     TextUtils::slowPrint(FG_BRIGHT_GREEN "  [2] Multiplayer (vs Friend)\n" RESET, 20);
+    TextUtils::slowPrint(FG_BRIGHT_RED "  [3] Exit..\n" RESET, 20);
 
     std::cout << "\n" << FG_CYAN << "Enter your choice: " << RESET;
     std::getline(std::cin, input);
@@ -230,6 +225,13 @@ GameMode GameUI::askGameMode() {
     
       return GameMode::MultiPlayer;
     
+    } else if (input == "3" || input == "exit" || input == "Exit" || input == "Q" || input == "q") {
+      std::cout << "\n" << FG_RED;
+      TextUtils::slowPrint(">> Exiting...\n", 80);
+      std::cout << RESET;
+      TextUtils::sleepMilliSec(1000);
+
+      return GameMode::Quit;
     } else {
       std::cout << "\n" << FG_RED;
       TextUtils::slowPrint("!! Invalid input. Please enter 1 or 2.\n", 20);
@@ -238,7 +240,6 @@ GameMode GameUI::askGameMode() {
     }
   }
 }
-
 
 void GameUI::printWelcome() {
     system(CLEAR_COMMAND);
@@ -293,6 +294,7 @@ void GameUI::printPlayerAdded(const Player& player) {
   TextUtils::slowPrint(msg, 60);
   TextUtils::sleepMilliSec(900);
 }
+
 void GameUI::printDrawMessage() {
   std::cout << FG_BRIGHT_BLACK;
   std::cout << "+--------------------------------------------------+\n";
@@ -302,7 +304,6 @@ void GameUI::printDrawMessage() {
   std::cout << "+--------------------------------------------------+\n";
   std::cout << RESET;
 }
-
 
 short GameUI::getPlayerMove(const std::string& name, char symbol, const char board[3][3]) {
   std::string input;
@@ -336,8 +337,8 @@ void GameUI::printInvalidInputMessage() {
 }
 
 void GameUI::displayGameOver() {
-    system(CLEAR_COMMAND);
-    using namespace std::chrono_literals;
+  system(CLEAR_COMMAND);
+  using namespace std::chrono_literals;
     std::cout << FG_BRIGHT_BLACK;
     std::cout << "+============================================+\n";
     std::cout << RESET;
@@ -355,4 +356,54 @@ void GameUI::displayGameOver() {
     std::cout << RESET;
 
     std::this_thread::sleep_for(3s); // Pause for 3 seconds
+}
+
+BotDifficulty GameUI::askBotDifficulty() {
+  int choice;
+
+  while (true) {
+    std::cout << "\n";
+    TextUtils::slowPrint("Please choose the bot difficulty level:\n\n", 30, FG_CYAN);
+
+    TextUtils::styledPrint("  1. Easy   ", FG_BRIGHT_GREEN);
+    TextUtils::slowPrint(" - For a relaxed game with simple moves.\n", 15);
+
+    TextUtils::styledPrint("  2. Medium ", FG_BRIGHT_YELLOW);
+    TextUtils::slowPrint(" - A balanced challenge for casual players.\n", 15);
+
+    TextUtils::styledPrint("  3. Hard   ", FG_BRIGHT_RED);
+    TextUtils::slowPrint(" - For those seeking a serious test of skill.\n\n", 15);
+
+    TextUtils::styledPrint("Enter your choice [1-3]: ", FG_CYAN);
+
+    std::cin >> choice;
+
+    if (std::cin.fail() || choice < 1 || choice > 3) {
+      std::cin.clear();
+      std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+      TextUtils::styledPrint("\nInvalid input. Please enter a number between 1 and 3.\n", FG_BRIGHT_RED);
+      TextUtils::sleepMilliSec(1500);
+      std::cout << "\n";
+      continue;
+    }
+
+    std::cout << "\n";
+
+    switch (choice) {
+      case 1:
+        TextUtils::styledPrint("Bot difficulty set to Easy. Good luck! :)\n\n", FG_BRIGHT_GREEN);
+        return BotDifficulty::Easy;
+
+      case 2:
+        TextUtils::styledPrint("Bot difficulty set to Medium. Challenge accepted!\n\n", FG_BRIGHT_YELLOW);
+        return BotDifficulty::Medium;
+
+      case 3:
+        TextUtils::styledPrint("Bot difficulty set to Hard. Brace yourself! ⚔️\n\n", FG_BRIGHT_RED);
+        return BotDifficulty::Hard;
+
+      default:
+        return BotDifficulty::Easy;  // Fallback, should never reach here
+    }
+  }
 }

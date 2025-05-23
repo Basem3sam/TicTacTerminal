@@ -16,8 +16,3 @@ struct Board {
 
   void reset();
 };
-
-enum class GameMode {
-  SinglePlayer,
-  MultiPlayer
-};

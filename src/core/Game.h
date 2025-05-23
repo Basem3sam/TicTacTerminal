@@ -16,11 +16,12 @@ class Game {
   Human singlePlayer;
 
   void addPlayer(int index, const PlayerInfo& info);
-  void setup();
+  GameMode setup();
   void multiPlay();
+  void singlePlay();
   // static Human addPlayer(int playerNumber, char takenSymbol = '\0'); OLD
 
 public:
   explicit Game(IGameUI* ui);
-  void loop();
+  bool play();
 };

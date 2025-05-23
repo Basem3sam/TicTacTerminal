@@ -14,7 +14,7 @@ public:
     Human();
     Human(const std::string& name);
 
-    short getId() const;
+    short getId() const override;
     std::string getName() const override;
     void setSymbol(char symbol);
     int getScore();

@@ -26,6 +26,11 @@ GameMode GameGUI::askGameMode() {
   return GameMode::MultiPlayer;
 }
 
+BotDifficulty GameGUI::askBotDifficulty() {
+  displayMessage("Bot difficulty set to Medium (default)", 2000);
+  return BotDifficulty::Medium;
+}
+
 PlayerInfo GameGUI::promptPlayerInfo(int playerNumber, char takenSymbol, bool askForType) {
   PlayerInfo info;
 
@@ -60,7 +65,7 @@ void GameGUI::printPlayerAdded(const Player& player) {
     displayMessage(player.getName() + " joined with symbol " + player.getSymbol());
 }
 
-void GameGUI::printWinMessage(Human& player) {
+void GameGUI::printWinMessage(Player& player) {
     displayMessage(player.getName() + " wins!");
 }
 
